@@ -1,14 +1,14 @@
-﻿Build started 27/11/2022 9:05:41 AM.
+﻿Build started 27/11/2022 1:43:02 PM.
      1>Project "C:\Users\MN\Documents\Visual Studio 2015\Projects\Sudoku\Sudoku P\Sudoku P.vcxproj" on node 2 (Build target(s)).
      1>ClCompile:
          C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\x86_amd64\CL.exe /c /ZI /nologo /W3 /WX- /sdl /Od /D _MBCS /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"x64\Debug\\" /Fd"x64\Debug\vc140.pdb" /Gd /TP /errorReport:prompt main.cpp
          main.cpp
-     1>c:\users\mn\documents\visual studio 2015\projects\sudoku\sudoku p\main.cpp(76): warning C4244: 'argument': conversion from 'time_t' to 'unsigned int', possible loss of data
-     1>c:\users\mn\documents\visual studio 2015\projects\sudoku\sudoku p\main.cpp(211): warning C4800: 'int': forcing value to bool 'true' or 'false' (performance warning)
-     1>c:\users\mn\documents\visual studio 2015\projects\sudoku\sudoku p\main.cpp(363): warning C4800: 'int': forcing value to bool 'true' or 'false' (performance warning)
-     1>c:\users\mn\documents\visual studio 2015\projects\sudoku\sudoku p\main.cpp(425): warning C4244: '-=': conversion from 'double' to 'int', possible loss of data
-     1>c:\users\mn\documents\visual studio 2015\projects\sudoku\sudoku p\main.cpp(955): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
-     1>c:\users\mn\documents\visual studio 2015\projects\sudoku\sudoku p\main.cpp(956): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
+     1>c:\users\mn\documents\visual studio 2015\projects\sudoku\sudoku p\main.cpp(100): warning C4244: 'argument': conversion from 'time_t' to 'unsigned int', possible loss of data
+     1>c:\users\mn\documents\visual studio 2015\projects\sudoku\sudoku p\main.cpp(246): warning C4800: 'int': forcing value to bool 'true' or 'false' (performance warning)
+     1>c:\users\mn\documents\visual studio 2015\projects\sudoku\sudoku p\main.cpp(416): warning C4800: 'int': forcing value to bool 'true' or 'false' (performance warning)
+     1>c:\users\mn\documents\visual studio 2015\projects\sudoku\sudoku p\main.cpp(486): warning C4244: '-=': conversion from 'double' to 'int', possible loss of data
+     1>c:\users\mn\documents\visual studio 2015\projects\sudoku\sudoku p\main.cpp(1027): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
+     1>c:\users\mn\documents\visual studio 2015\projects\sudoku\sudoku p\main.cpp(1028): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
        Link:
          C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\x86_amd64\link.exe /ERRORREPORT:PROMPT /OUT:"C:\Users\MN\Documents\Visual Studio 2015\Projects\Sudoku\x64\Debug\Sudoku.exe" /INCREMENTAL /NOLOGO /LIBPATH:"C:\Users\MN\Downloads\SDL2-devel-2.24.2-VC\SDL2\lib\x64" SDL2.lib SDL2main.lib SDL2_image.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /Debug /PDB:"C:\Users\MN\Documents\Visual Studio 2015\Projects\Sudoku\x64\Debug\Sudoku.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"C:\Users\MN\Documents\Visual Studio 2015\Projects\Sudoku\x64\Debug\Sudoku.lib" /MACHINE:X64 x64\Debug\main.obj
          Sudoku P.vcxproj -> C:\Users\MN\Documents\Visual Studio 2015\Projects\Sudoku\x64\Debug\Sudoku.exe
@@ -16,4 +16,4 @@
 
 Build succeeded.
 
-Time Elapsed 00:00:02.04
+Time Elapsed 00:00:01.20

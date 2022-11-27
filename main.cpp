@@ -5,7 +5,6 @@
 #include "SDL.h"
 #include "SDL_image.h"
 
-
 SDL_Texture *boardNumbers[9];
 SDL_Texture *boardNumbersDefault[9];
 SDL_Texture *board;
@@ -51,6 +50,22 @@ SDL_Texture *emptySlotDefault;
 SDL_Texture *emptySlotHover;
 SDL_Texture *emptySlotPress;
 
+// load audio from ./assets/sounds/cellSelect.mp3
+SDL_AudioSpec cellSelectSpec;
+Uint32 cellSelectLength;
+Uint8 *cellSelectBuffer;
+SDL_AudioDeviceID cellSelectDeviceId;
+
+SDL_AudioSpec buttonDownSpec;
+Uint32 buttonDownLength;
+Uint8 *buttonDownBuffer;
+SDL_AudioDeviceID buttonDownDeviceId;
+
+SDL_AudioSpec buttonUpSpec;
+Uint32 buttonUpLength;
+Uint8 *buttonUpBuffer;
+SDL_AudioDeviceID buttonUpDeviceId;
+
 void drawBoard(
 	SDL_Renderer *renderer,
 	bool LeftClick, int &selectedRow,
@@ -67,6 +82,15 @@ bool findEmptyCell(int board[][9], int &row, int &col);
 bool badMove(int board[][9], int row, int col, int num);
 bool checkWin(int gameMoves[][9]);
 void getMousePos(SDL_Renderer *renderer, int &x, int &y);
+void buttonDownSound(){
+	SDL_QueueAudio(buttonDownDeviceId, buttonDownBuffer, buttonDownLength);
+	SDL_PauseAudioDevice(buttonDownDeviceId, 0);
+}
+void buttonUpSound() {
+	SDL_QueueAudio(buttonUpDeviceId, buttonUpBuffer, buttonUpLength);
+	SDL_PauseAudioDevice(buttonUpDeviceId, 0);
+}
+
 
 bool windowed = false;
 int existingSaves[3] = { 0, 0, 0 };
@@ -76,6 +100,10 @@ int main(int argc, char *argv[])
 	srand(time(NULL));
 	//Initializing the window and the renderer
 	SDL_Init(SDL_INIT_EVERYTHING);
+		
+	SDL_Init(SDL_INIT_AUDIO);
+	//Initialize SDL_mixer
+	
 	SDL_Window *window = SDL_CreateWindow("Sudoku", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1055, 700, SDL_WINDOW_FULLSCREEN_DESKTOP);
 	SDL_Rect boardRect;
 	SDL_GetWindowSize(window, &boardRect.w, &boardRect.h);
@@ -90,6 +118,14 @@ int main(int argc, char *argv[])
 	SDL_SetWindowIcon(window, icon);
 	SDL_FreeSurface(icon);
 
+	SDL_LoadWAV("./assets/sounds/cellSelect.wav", &cellSelectSpec, &cellSelectBuffer, &cellSelectLength);
+	cellSelectDeviceId =  SDL_OpenAudioDevice(NULL, 0, &cellSelectSpec, NULL, 0);
+
+	SDL_LoadWAV("./assets/sounds/buttonDown.wav", &buttonDownSpec, &buttonDownBuffer, &buttonDownLength);
+	buttonDownDeviceId =  SDL_OpenAudioDevice(NULL, 0, &buttonDownSpec, NULL, 0);
+
+	SDL_LoadWAV("./assets/sounds/buttonUp.wav", &buttonUpSpec, &buttonUpBuffer, &buttonUpLength);
+	buttonUpDeviceId =  SDL_OpenAudioDevice(NULL, 0, &buttonUpSpec, NULL, 0);
 
 	// loading textures and assets
 	board = IMG_LoadTexture(renderer, "./assets/images/board/board.png");
@@ -175,7 +211,6 @@ int main(int argc, char *argv[])
 	emptySlotHover = IMG_LoadTexture(renderer, "./assets/images/buttons/saveMenu/hover/empty.png");
 	emptySlotPress = IMG_LoadTexture(renderer, "./assets/images/buttons/saveMenu/press/empty.png");
 
-
 	bool mainMenuActive = true;
 	bool saveMenuActive = false;
 	bool boardActive = false;
@@ -210,6 +245,7 @@ int main(int argc, char *argv[])
 		SDL_Event event;
 		bool eventHappened = SDL_PollEvent(&event);
 		bool mouseReleased = false;
+		bool mousePressed = false;
 		if (eventHappened)
 		{
 			if (event.type == SDL_QUIT || (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_ESCAPE))
@@ -217,6 +253,7 @@ int main(int argc, char *argv[])
 			if (event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT)
 			{
 				LeftClick = true;
+				mousePressed = true;
 				
 			}
 			if (event.type == SDL_MOUSEBUTTONUP && event.button.button == SDL_BUTTON_LEFT)
@@ -263,6 +300,7 @@ int main(int argc, char *argv[])
 				getMousePos(renderer, x, y);
 				if(x >=  buttonsCoords[i][0] + 68/2 && x <=  buttonsCoords[i][0] + 68/2 + 56 && y >=  buttonsCoords[i][1] + 68/2 && y <=  buttonsCoords[i][1] + 68/2 + 56  && !popupActive){
 					if(mouseReleased){
+						buttonUpSound();
 						//change the number of the cell to the number of the pressed button
 						if(selectedRow != -1 && selectedCol != -1){
 							// validate move
@@ -280,13 +318,17 @@ int main(int argc, char *argv[])
 							saveSlot(gameMoves, selectedSlot, mistakesCount, gameInitialMoves);
 						}
 					}
+					if(mousePressed){
+						buttonDownSound();
+					}
 				}
 			}
 			// if mouse is released on quit button:
-			if(mouseReleased){
-				int x, y;
-				getMousePos(renderer, x, y);
-				if(x >= 754+34 && x <= 754 + 298 - 34 && y >= 507 + 29 && y <= 507 + 117 - 29){
+			int x, y;
+			getMousePos(renderer, x, y);
+			if(x >= 754+34 && x <= 754 + 298 - 34 && y >= 507 + 29 && y <= 507 + 117 - 29){
+				if(mouseReleased){
+					buttonUpSound();
 					saveSlot(gameMoves, selectedSlot, mistakesCount, gameInitialMoves);
 					popupActive = false;
 					mainMenuActive = true;
@@ -306,6 +348,9 @@ int main(int argc, char *argv[])
 					}
 					scanSlots();
 				}
+				if(mousePressed){
+					buttonDownSound();
+				}
 			}
 		}
 		else if (mainMenuActive){
@@ -322,6 +367,7 @@ int main(int argc, char *argv[])
 					else SDL_RenderCopy(renderer, menuButtonsHover[i], NULL, &buttonRect);
 					//if mouse button is released, change the state of the game
 					if(event.type == SDL_MOUSEBUTTONUP && event.button.button == SDL_BUTTON_LEFT){
+						buttonUpSound();
 						if(i == 0){
 							mainMenuActive = false;
 							saveMenuActive = false;
@@ -336,6 +382,9 @@ int main(int argc, char *argv[])
 						else if(i == 2){
 							quit = true;
 						}
+					}
+					if(mousePressed){
+						buttonDownSound();
 					}
 				}
 				else{
@@ -353,8 +402,12 @@ int main(int argc, char *argv[])
 				getMousePos(renderer, x, y);
 				if(x >= 51 && x <= 51 + 74 && y >= 51 && y <= 51 + 66){
 					if(mouseReleased){
+						buttonUpSound();
 						saveMenuActive = false;
 						mainMenuActive = true;
+					}
+					if(mousePressed){
+						buttonDownSound();
 					}
 				}
 			}
@@ -371,6 +424,7 @@ int main(int argc, char *argv[])
 					else SDL_RenderCopy(renderer, saveExists?slotButtonHover[i]:emptySlotHover, NULL, &buttonRect);
 					//if mouse button is released, change the state of the game
 					if(event.type == SDL_MOUSEBUTTONUP && event.button.button == SDL_BUTTON_LEFT){
+						buttonUpSound();
 						selectedSlot = i;
 						if(createNewGame){
 							generateBoard(gameMoves, gameInitialMoves, level);
@@ -381,6 +435,9 @@ int main(int argc, char *argv[])
 						saveSlot(gameMoves, selectedSlot, mistakesCount, gameInitialMoves);
 						boardActive = true;
 						saveMenuActive = false;
+					}
+					if(mousePressed){
+						buttonDownSound();
 					}
 				}
 				else{
@@ -406,9 +463,13 @@ int main(int argc, char *argv[])
 					else SDL_RenderCopy(renderer, levelButtonsHover[i], NULL, &buttonRect);
 					//if mouse button is released, change the state of the game
 					if(event.type == SDL_MOUSEBUTTONUP && event.button.button == SDL_BUTTON_LEFT){
+						buttonUpSound();
 						level = i + 1;
 						levelMenuActive = false;
 						saveMenuActive = true;
+					}
+					if(mousePressed){
+						buttonDownSound();
 					}
 				}
 				else{
@@ -442,7 +503,7 @@ int main(int argc, char *argv[])
 					SDL_RenderCopy(renderer, backToMenuButtonPress, NULL, &buttonRect);
 				else SDL_RenderCopy(renderer, backToMenuButtonHover, NULL, &buttonRect);
 				if(event.type == SDL_MOUSEBUTTONUP && event.button.button == SDL_BUTTON_LEFT){
-					
+					buttonUpSound();
 					popupActive = false;
 					mainMenuActive = true;
 					boardActive = false;
@@ -460,6 +521,9 @@ int main(int argc, char *argv[])
 						}
 					}
 					scanSlots();
+				}
+				if(mousePressed){
+					buttonDownSound();
 				}
 			}
 			else{
@@ -527,6 +591,13 @@ void drawBoard(SDL_Renderer *renderer, bool LeftClick, int &selectedRow, int &se
 			for (int j = 0; j < 9; j++) {
 				if(gameInitialMoves[j][i] != -1) continue;
 				if (x >= boardCoords[i] && x <= boardCoords[i] + 68 && y >= boardCoords[j] && y <= boardCoords[j] + 68 && !popupActive) {
+					if(selectedRow == j && selectedCol == i){
+						selectedRow = -1;
+						selectedCol = -1;
+						break;
+					}
+					SDL_QueueAudio(cellSelectDeviceId, cellSelectBuffer, cellSelectLength);
+					SDL_PauseAudioDevice(cellSelectDeviceId, 0);
 					selectedRow = j;
 					selectedCol = i;
 					std::cout << "selected row: " << selectedRow << " selected col: " << selectedCol << std::endl;
@@ -598,6 +669,7 @@ void drawBoard(SDL_Renderer *renderer, bool LeftClick, int &selectedRow, int &se
 		else {
 			SDL_RenderCopy(renderer, quitButtonHover, NULL, &rect2);
 		}
+
 	}
 	else {
 		SDL_RenderCopy(renderer, quitButton, NULL, &rect2);
