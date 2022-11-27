@@ -248,7 +248,7 @@ int main(int argc, char *argv[])
 		bool mousePressed = false;
 		if (eventHappened)
 		{
-			if (event.type == SDL_QUIT || (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_ESCAPE))
+			if (event.type == SDL_QUIT)
 				break;
 			if (event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT)
 			{
