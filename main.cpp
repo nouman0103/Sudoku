@@ -785,8 +785,8 @@ void shuffleRows(int board[][9]){
 		else{
 			shuffleGivenRows(board, 6, 7, 8);
 		}
-		// theres a 10% chance that the rows will stop being shuffled
-		if(rand() % 10 == 0){
+		// theres a 5% chance that the rows will stop being shuffled
+		if(rand() % 100 < 5){
 			break;
 		}
 	}
@@ -828,8 +828,8 @@ void shuffleColumns(int board[][9]){
 		else{
 			shuffleGivenColumns(board, 6, 7, 8);
 		}
-		// theres a 10% chance that the columns will stop being shuffled
-		if(rand() % 10 == 0){
+		// theres a 5% chance that the columns will stop being shuffled
+		if(rand() % 100 < 5){
 			break;
 		}
 	}
@@ -858,16 +858,11 @@ void generateBoard(int gameMoves[][9], int gameInitial[][9], int level){
 	solveSudoku(gameMoves);
 	for(int i = 0; i < 1000; i++){
 		// shuffle the rows or columns or transpose
-		int num = rand() % 3 + 1;
-		if(num == 1){
-			shuffleRows(gameMoves);
-		}
-		else if(num == 2){
-			shuffleColumns(gameMoves);
-		}
-		else{
-			transpose(gameMoves);
-		}
+		shuffleRows(gameMoves);
+		shuffleColumns(gameMoves);
+		transpose(gameMoves);
+		// 1 ms delay
+		if(i%10==0) SDL_Delay(1);
 		
 	}
 
