@@ -7,6 +7,7 @@
 
 SDL_Texture *boardNumbers[9];
 SDL_Texture *boardNumbersDefault[9];
+SDL_Texture *boardNumbersMistakes[9];
 SDL_Texture *board;
 SDL_Texture *selectedRowTex;
 SDL_Texture *selectedColTex;
@@ -26,7 +27,6 @@ const int buttonsCoords[9][2] = {{743, 207}, {843, 207}, {943, 207}, {743, 307},
 SDL_Texture *slotButtonsDefault[3];
 SDL_Texture *slotButtonHover[3];
 SDL_Texture *slotButtonPress[3];
-SDL_Texture *mistakes[4];
 SDL_Texture *mistakeOverlay;
 
 SDL_Texture *quitButton;
@@ -39,7 +39,6 @@ SDL_Texture *levelButtonsPress[3];
 SDL_Texture *levelButtonsHover[3];
 
 SDL_Texture *winPopup;
-SDL_Texture *lostPopup;
 SDL_Texture *backToMenuButton;
 SDL_Texture *backToMenuButtonHover;
 SDL_Texture *backToMenuButtonPress;
@@ -69,10 +68,10 @@ SDL_AudioDeviceID buttonUpDeviceId;
 void drawBoard(
 	SDL_Renderer *renderer,
 	bool LeftClick, int &selectedRow,
-	int &selectedCol, int gameMoves[][9], int mistakesCount, int gameInitialMoves[][9],
+	int &selectedCol, int gameMoves[][9], int gameInitialMoves[][9],
 	bool mouseReleased, bool popupActive);
-void loadSlot(int gameMoves[][9], int &slot, int &mistakes, int gameInitialMoves[][9]);
-void saveSlot(int gameMoves[][9], int &slot, int &mistakes, int gameInitialMoves[][9]);
+void loadSlot(int gameMoves[][9], int &slot, int gameInitialMoves[][9]);
+void saveSlot(int gameMoves[][9], int &slot, int gameInitialMoves[][9]);
 void resetSlot(int &slot);
 void scanSlots();
 void generateBoard(int gameMoves[][9], int gameInitialMoves[][9], int level);
@@ -81,6 +80,8 @@ bool solveSudoku(int board[][9]);
 bool findEmptyCell(int board[][9], int &row, int &col);
 bool badMove(int board[][9], int row, int col, int num);
 bool checkWin(int gameMoves[][9]);
+void shuffleRowGroups(int board[][9]);
+
 void getMousePos(SDL_Renderer *renderer, int &x, int &y);
 void buttonDownSound(){
 	SDL_QueueAudio(buttonDownDeviceId, buttonDownBuffer, buttonDownLength);
@@ -94,6 +95,7 @@ void buttonUpSound() {
 
 bool windowed = false;
 int existingSaves[3] = { 0, 0, 0 };
+int gameMistakes[9][9];
 
 int main(int argc, char *argv[])
 {
@@ -150,6 +152,8 @@ int main(int argc, char *argv[])
 		boardNumbers[i-1] = IMG_LoadTexture(renderer, path.c_str());
 		path = "./assets/images/board/numbers/system/" + std::to_string(i) + ".png";
 		boardNumbersDefault[i-1] = IMG_LoadTexture(renderer, path.c_str());
+		path = "./assets/images/board/numbers/mistakes/" + std::to_string(i) + ".png";
+		boardNumbersMistakes[i-1] = IMG_LoadTexture(renderer, path.c_str());
 
 	}
 
@@ -179,10 +183,6 @@ int main(int argc, char *argv[])
 		slotButtonPress[i-1] = IMG_LoadTexture(renderer, path.c_str());
 	}
 
-	for(int i = 0; i < 4; i++){
-		std::string path = "./assets/images/board/mistakes/mistakes_" + std::to_string(i) + ".png";
-		mistakes[i] = IMG_LoadTexture(renderer, path.c_str());
-	}
 	mistakeOverlay = IMG_LoadTexture(renderer, "./assets/images/board/mistakes/overlay.png");
 
 	quitButton = IMG_LoadTexture(renderer, "./assets/images/buttons/board/default/quit.png");
@@ -200,7 +200,6 @@ int main(int argc, char *argv[])
 	}
 
 	winPopup = IMG_LoadTexture(renderer, "./assets/images/menu/resultPopupWin.png");
-	lostPopup = IMG_LoadTexture(renderer, "./assets/images/menu/resultPopupLost.png");
 	backToMenuButton = IMG_LoadTexture(renderer, "./assets/images/buttons/board/default/backToMenu.png");
 	backToMenuButtonHover = IMG_LoadTexture(renderer, "./assets/images/buttons/board/hover/backToMenu.png");
 	backToMenuButtonPress = IMG_LoadTexture(renderer, "./assets/images/buttons/board/press/backToMenu.png");
@@ -224,20 +223,19 @@ int main(int argc, char *argv[])
 	int selectedSlot = -1;
 	int gameMoves[9][9] = {-1};
 	int gameInitialMoves[9][9] = {-1};
-	int mistakesCount = 0;
+	
 	bool createNewGame = false;
 	int mistakeOverlayAlpha = 0;
 	int level = 1;
-
 	
 	for(int i = 0; i < 9; i++){
 		for(int j = 0; j < 9; j++){
 			gameInitialMoves[i][j] = -1;
+			gameMistakes[i][j] = -1;
 		}
 	}
 	scanSlots();
 	bool quit = false;
-	bool gameWon = false;
 	// the game loop
 	while (!quit)
 	{
@@ -284,38 +282,36 @@ int main(int argc, char *argv[])
 		boardRect.y = 0;
 		boardRect.w = 1055;
 		boardRect.h = 700;
+		int x, y;
+		getMousePos(renderer, x, y);
 		SDL_RenderCopy(renderer, board, NULL, &boardRect);
-		if(mistakesCount >= 3){
-			popupActive = true;
-		}
-
 		// draw stuff
 		if(boardActive){
 			drawBoard(
-				renderer, LeftClick, selectedRow, selectedCol, gameMoves, mistakesCount,
+				renderer, LeftClick, selectedRow, selectedCol, gameMoves,
 				gameInitialMoves, mouseReleased, popupActive
 			);
 			for(int i = 0; i < 9; i++){
-				int x, y;
-				getMousePos(renderer, x, y);
 				if(x >=  buttonsCoords[i][0] + 68/2 && x <=  buttonsCoords[i][0] + 68/2 + 56 && y >=  buttonsCoords[i][1] + 68/2 && y <=  buttonsCoords[i][1] + 68/2 + 56  && !popupActive){
 					if(mouseReleased){
 						buttonUpSound();
 						//change the number of the cell to the number of the pressed button
 						if(selectedRow != -1 && selectedCol != -1){
 							// validate move
-							if(validateCell(gameMoves, selectedRow, selectedCol, i+1) && !badMove(gameMoves, selectedRow, selectedCol, i+1)){
-								gameMoves[selectedRow][selectedCol] = i+1;
-								if(checkWin(gameMoves)){
-									gameWon = true;
-									popupActive = true;
-								}
+							gameMoves[selectedRow][selectedCol] = -1;
+							if(!validateCell(gameMoves, selectedRow, selectedCol, i+1) || badMove(gameMoves, selectedRow, selectedCol, i+1)){
+								mistakeOverlayAlpha = 255;
+								gameMistakes[selectedRow][selectedCol] = i+1;
 							}
 							else{
-								mistakesCount++;
-								mistakeOverlayAlpha = 255;
+								gameMoves[selectedRow][selectedCol] = i+1;
+								gameMistakes[selectedRow][selectedCol] = -1;
 							}
-							saveSlot(gameMoves, selectedSlot, mistakesCount, gameInitialMoves);
+							if(checkWin(gameMoves)){
+								popupActive = true;
+							}							
+							
+							saveSlot(gameMoves, selectedSlot, gameInitialMoves);
 						}
 					}
 					if(mousePressed){
@@ -324,26 +320,23 @@ int main(int argc, char *argv[])
 				}
 			}
 			// if mouse is released on quit button:
-			int x, y;
-			getMousePos(renderer, x, y);
 			if(x >= 754+34 && x <= 754 + 298 - 34 && y >= 507 + 29 && y <= 507 + 117 - 29){
 				if(mouseReleased){
 					buttonUpSound();
-					saveSlot(gameMoves, selectedSlot, mistakesCount, gameInitialMoves);
+					saveSlot(gameMoves, selectedSlot, gameInitialMoves);
 					popupActive = false;
 					mainMenuActive = true;
 					boardActive = false;
 					saveMenuActive = false;
 					levelMenuActive = false;
 					createNewGame = false;
-					gameWon = false;
-					mistakesCount = 0;
 					selectedSlot = 0;
 					level = 0;
 					for(int i = 0; i < 9; i++){
 						for(int j = 0; j < 9; j++){
 							gameMoves[i][j] = -1;
 							gameInitialMoves[i][j] = -1;
+							gameMistakes[i][j] = -1;
 						}
 					}
 					scanSlots();
@@ -359,8 +352,6 @@ int main(int argc, char *argv[])
 			for(int i = 0; i < 3; i++){
 				SDL_Rect buttonRect = {menuButtonsCoords[i][0], menuButtonsCoords[i][1], 448, 143};
 				// if the mouse is hovering over the button, draw the hover texture
-				int x, y;
-				getMousePos(renderer, x, y);
 				if(x > menuButtonsCoords[i][0] + 34 && x < menuButtonsCoords[i][0] + 448 - 34 && y > menuButtonsCoords[i][1] + 29 && y < menuButtonsCoords[i][1] + 143 - 29){
 					if(LeftClick)
 						SDL_RenderCopy(renderer, menuButtonsPress[i], NULL, &buttonRect);
@@ -395,20 +386,16 @@ int main(int argc, char *argv[])
 		}
 		else if(saveMenuActive){
 			SDL_RenderCopy(renderer, saveMenu, NULL, NULL);
-			if(!createNewGame){
-				SDL_RenderCopy(renderer, backButtonBasic, NULL, NULL);
-				// if mouse is pressed on backButtonBasic, go back to main menu
-				int x, y;
-				getMousePos(renderer, x, y);
-				if(x >= 51 && x <= 51 + 74 && y >= 51 && y <= 51 + 66){
-					if(mouseReleased){
-						buttonUpSound();
-						saveMenuActive = false;
-						mainMenuActive = true;
-					}
-					if(mousePressed){
-						buttonDownSound();
-					}
+			SDL_RenderCopy(renderer, backButtonBasic, NULL, NULL);
+			// if mouse is pressed on backButtonBasic, go back to main menu
+			if(x >= 51 && x <= 51 + 74 && y >= 51 && y <= 51 + 66){
+				if(mouseReleased){
+					buttonUpSound();
+					saveMenuActive = false;
+					mainMenuActive = true;
+				}
+				if(mousePressed){
+					buttonDownSound();
 				}
 			}
 			// draw save menu buttons, check for clicks
@@ -416,8 +403,6 @@ int main(int argc, char *argv[])
 				bool saveExists = existingSaves[i];
 
 				SDL_Rect buttonRect = {menuButtonsCoords[i][0], menuButtonsCoords[i][1], 448, 143};
-				int x, y;
-				getMousePos(renderer, x, y);
 				if(!(saveExists == false && createNewGame == false) && x > menuButtonsCoords[i][0] + 34 && x < menuButtonsCoords[i][0] + 448 - 34 && y > menuButtonsCoords[i][1] + 29 && y < menuButtonsCoords[i][1] + 143 - 29){
 					if(LeftClick)
 						SDL_RenderCopy(renderer, saveExists?slotButtonPress[i]:emptySlotPress, NULL, &buttonRect);
@@ -430,9 +415,9 @@ int main(int argc, char *argv[])
 							generateBoard(gameMoves, gameInitialMoves, level);
 						}
 						else{
-							loadSlot(gameMoves, selectedSlot, mistakesCount, gameInitialMoves);
+							loadSlot(gameMoves, selectedSlot, gameInitialMoves);
 						}
-						saveSlot(gameMoves, selectedSlot, mistakesCount, gameInitialMoves);
+						saveSlot(gameMoves, selectedSlot, gameInitialMoves);
 						boardActive = true;
 						saveMenuActive = false;
 					}
@@ -452,11 +437,21 @@ int main(int argc, char *argv[])
 		}
 		else if(levelMenuActive){
 			SDL_RenderCopy(renderer, levelMenu, NULL, NULL);
+			SDL_RenderCopy(renderer, backButtonBasic, NULL, NULL);
+			// if mouse is pressed on backButtonBasic, go back to main menu
+			if(x >= 51 && x <= 51 + 74 && y >= 51 && y <= 51 + 66){
+				if(mouseReleased){
+					buttonUpSound();
+					levelMenuActive = false;
+					mainMenuActive = true;
+				}
+				if(mousePressed){
+					buttonDownSound();
+				}
+			}
 			// draw level menu buttons, check for clicks, and change the state of the game
 			for(int i = 0; i < 3; i++){
 				SDL_Rect buttonRect = {menuButtonsCoords[i][0], menuButtonsCoords[i][1], 448, 143};
-				int x, y;
-				getMousePos(renderer, x, y);
 				if(x > menuButtonsCoords[i][0] + 34 && x < menuButtonsCoords[i][0] + 448 - 34 && y > menuButtonsCoords[i][1] + 29 && y < menuButtonsCoords[i][1] + 143 - 29){
 					if(LeftClick)
 						SDL_RenderCopy(renderer, levelButtonsPress[i], NULL, &buttonRect);
@@ -488,16 +483,9 @@ int main(int argc, char *argv[])
 
 		// draw popup
 		if(popupActive){
-			if(gameWon){
-				SDL_RenderCopy(renderer, winPopup, NULL, NULL);
-			}
-			else{
-				SDL_RenderCopy(renderer, lostPopup, NULL, NULL);
-			}
+			SDL_RenderCopy(renderer, winPopup, NULL, NULL);
 			resetSlot(selectedSlot);
 			SDL_Rect buttonRect = {306, 333, 443, 152};
-			int x, y;
-			getMousePos(renderer, x, y);
 			if(x > 306 + 34 && x < 306 + 443 - 34 && y > 333 + 29 && y < 333 + 143 - 29){
 				if(LeftClick)
 					SDL_RenderCopy(renderer, backToMenuButtonPress, NULL, &buttonRect);
@@ -510,14 +498,13 @@ int main(int argc, char *argv[])
 					saveMenuActive = false;
 					levelMenuActive = false;
 					createNewGame = false;
-					gameWon = false;
-					mistakesCount = 0;
 					selectedSlot = 0;
 					level = 0;
 					for(int i = 0; i < 9; i++){
 						for(int j = 0; j < 9; j++){
 							gameMoves[i][j] = -1;
 							gameInitialMoves[i][j] = -1;
+							gameMistakes[i][j] = -1;
 						}
 					}
 					scanSlots();
@@ -549,7 +536,7 @@ int main(int argc, char *argv[])
 }
 
 
-void drawBoard(SDL_Renderer *renderer, bool LeftClick, int &selectedRow, int &selectedCol, int gameMoves[][9], int mistakesCount, int gameInitialMoves[][9], bool mouseReleased, bool popupActive){
+void drawBoard(SDL_Renderer *renderer, bool LeftClick, int &selectedRow, int &selectedCol, int gameMoves[][9], int gameInitialMoves[][9], bool mouseReleased, bool popupActive){
 	for(int i = 0; i < 9; i++){
 		SDL_Rect rect;
 		rect.x = buttonsCoords[i][0];
@@ -576,13 +563,6 @@ void drawBoard(SDL_Renderer *renderer, bool LeftClick, int &selectedRow, int &se
 		
 	}
 
-	//draw mistakes
-	SDL_Rect rect;
-	rect.x = 809;
-	rect.y = 152;
-	rect.w = 199;
-	rect.h = 30;
-	SDL_RenderCopy(renderer, mistakes[mistakesCount], NULL, &rect);
 	// check if mouse is over a cell
 	if (mouseReleased) {
 		int x, y;
@@ -592,8 +572,6 @@ void drawBoard(SDL_Renderer *renderer, bool LeftClick, int &selectedRow, int &se
 				if(gameInitialMoves[j][i] != -1) continue;
 				if (x >= boardCoords[i] && x <= boardCoords[i] + 68 && y >= boardCoords[j] && y <= boardCoords[j] + 68 && !popupActive) {
 					if(selectedRow == j && selectedCol == i){
-						selectedRow = -1;
-						selectedCol = -1;
 						break;
 					}
 					SDL_QueueAudio(cellSelectDeviceId, cellSelectBuffer, cellSelectLength);
@@ -644,13 +622,21 @@ void drawBoard(SDL_Renderer *renderer, bool LeftClick, int &selectedRow, int &se
 	// draw the numbers on the board
 	for (int i = 0; i < 9; i++) {
 		for (int j = 0; j < 9; j++) {
-			if (gameMoves[i][j] != -1 && gameMoves[i][j] != 0) {
+			if ((gameMoves[i][j] != -1 && gameMoves[i][j] != 0) || gameMistakes[i][j] != -1) {
 				SDL_Rect rect;
 				rect.x = boardCoords[j]; // j is column, which changes the x coord
 				rect.y = boardCoords[i];
 				rect.w = 66;
 				rect.h = 66;
-				SDL_RenderCopy(renderer, ((gameInitialMoves[i][j]==-1)?boardNumbers:boardNumbersDefault)[gameMoves[i][j] - 1], NULL, &rect);
+
+				SDL_RenderCopy(
+					renderer,
+					(
+						(gameInitialMoves[i][j]==-1)?
+							((gameMistakes[i][j] == -1)? boardNumbers: boardNumbersMistakes):
+							boardNumbersDefault
+					)[((gameMistakes[i][j] == -1)?gameMoves:gameMistakes)[i][j] - 1],
+					NULL, &rect);
 			}
 		}
 	}
@@ -834,7 +820,7 @@ void shuffleColumns(int board[][9]){
 		}
 	}
 }
-void shuffleNonet(int board[][9]){
+void shuffleRowGroups(int board[][9]){
 	//put row 4,5,6 at row 1,2,3
 	// put row 7,8,9 at row 4,5,6
 	// put row 1,2,3 at row 7,8,9
@@ -861,7 +847,38 @@ void shuffleNonet(int board[][9]){
 	}
 	// theres a 90% chance that the nonets will be shuffled again
 	if(rand() % 10 < 9){
-		shuffleNonet(board);
+		shuffleRowGroups(board);
+	}
+}
+
+void shuffleColumnGroups(int board[][9]){
+	//put column 4,5,6 at column 1,2,3
+	// put column 7,8,9 at column 4,5,6
+	// put column 1,2,3 at column 7,8,9
+	int temp[9][9];
+	for(int i = 0; i < 9; i++){
+		for(int j = 0; j < 9; j++){
+			temp[i][j] = board[i][j];
+		}
+	}
+	for(int i = 0; i < 3; i++){
+		for(int j = 0; j < 9; j++){
+			board[j][i] = temp[j][i + 3];
+		}
+	}
+	for(int i = 3; i < 6; i++){
+		for(int j = 0; j < 9; j++){
+			board[j][i] = temp[j][i + 3];
+		}
+	}
+	for(int i = 6; i < 9; i++){
+		for(int j = 0; j < 9; j++){
+			board[j][i] = temp[j][i - 6];
+		}
+	}
+	// theres a 90% chance that the nonets will be shuffled again
+	if(rand() % 10 < 9){
+		shuffleColumnGroups(board);
 	}
 }
 
@@ -886,14 +903,17 @@ void generateBoard(int gameMoves[][9], int gameInitial[][9], int level){
 		}
 	}
 	solveSudoku(gameMoves);
-	for(int i = 0; i < 1000; i++){
+	for(int i = 0; i < 1500; i++){
 		// shuffle the rows or columns or transpose
 		shuffleRows(gameMoves);
 		shuffleColumns(gameMoves);
-		transpose(gameMoves);
-		shuffleNonet(gameMoves);
-		// 1 ms delay 
-		if(i%50==0) SDL_Delay(1);
+		shuffleRowGroups(gameMoves);
+		shuffleColumnGroups(gameMoves);
+		// 1 ms delay
+		if(i % 100 == 0){
+			transpose(gameMoves);
+		}
+		if(i%70==0) SDL_Delay(1);
 		
 	}
 
@@ -934,9 +954,9 @@ bool checkWin(int gameMoves[][9]){
 	return true;
 }
 
-void loadSlot(int gameMoves[][9], int &slot, int &mistakesCount, int gameInitialMoves[][9]){
+void loadSlot(int gameMoves[][9], int &slot, int gameInitialMoves[][9]){
 	/*
-File should store the mistakes made, the moves made, and the board
+File should store the moves made, and the board
 File format:
 -1+2+3-4+5+6+7+8+0
 +1+2-3+4+5+6-7+8-9
@@ -946,12 +966,11 @@ File format:
 +1+2+3+4+5+6+7+8+9
 +1+2+3+4+5+6+7+8+9
 +1+2+3+4+5+6+7+8+9
-mistakes: 0
 
 +ve number means the number is given by user
+= means the number is given by the user and is incorrect
 -ve number means the number is defined by computer
 0 for empty space
-mistakes can be 0, 1, or 2
 	*/
 	std::ifstream file;
 	file.open("./assets/saves/slot" + std::to_string(slot+1) + ".sav");
@@ -959,31 +978,23 @@ mistakes can be 0, 1, or 2
 		std::string line;
 		int row = 0;
 		while(std::getline(file, line)){
-			if(line == "mistakes: 0"){
-				mistakesCount = 0;
-			}
-			else if(line == "mistakes: 1"){
-				mistakesCount = 1;
-			}
-			else if(line == "mistakes: 2"){
-				mistakesCount = 2;
-			}
-			else{
-				for(int i = 0; i < 18; i++){
-					if(line[i] == '+'){
-						gameMoves[row][i/2] = line[i+1] - '0';
-					}
-					else if(line[i] == '-'){
-						gameMoves[row][i/2] = line[i+1] - '0';
-						gameInitialMoves[row][i/2] = line[i+1] - '0';
-					}
-					if(gameMoves[row][i/2] == 0){
-						gameMoves[row][i/2] = -1;
-						gameInitialMoves[row][i/2] = -1;
-					}
+			for(int i = 0; i < 18; i++){
+				if(line[i] == '+'){
+					gameMoves[row][i/2] = line[i+1] - '0';
 				}
-				row++;
+				else if(line[i] == '='){
+					gameMistakes[row][i/2] = line[i+1] - '0';
+				}
+				else if(line[i] == '-'){
+					gameMoves[row][i/2] = line[i+1] - '0';
+					gameInitialMoves[row][i/2] = line[i+1] - '0';
+				}
+				if(gameMoves[row][i/2] == 0){
+					gameMoves[row][i/2] = -1;
+					gameInitialMoves[row][i/2] = -1;
+				}
 			}
+			row++;
 		}
 		file.close();
 	}
@@ -993,14 +1004,15 @@ mistakes can be 0, 1, or 2
 	
 }
 
-void saveSlot(int gameMoves[][9], int &slot, int &mistakesCount, int gameInitialMoves[][9]){
+void saveSlot(int gameMoves[][9], int &slot, int gameInitialMoves[][9]){
 	std::ofstream file;
 	file.open("./assets/saves/slot" + std::to_string(slot+1) + ".sav");
 	if(file.is_open()){
 		for(int i = 0; i < 9; i++){
 			for(int j = 0; j < 9; j++){
 				if(gameInitialMoves[i][j] == -1){
-					file << "+" << ((gameMoves[i][j]==-1)?0:gameMoves[i][j]);
+					file << ((gameMistakes[i][j] == -1)? '+' : '=');
+					file << ((gameMoves[i][j]==-1)?((gameMistakes[i][j] == -1)?0:gameMistakes[i][j]):gameMoves[i][j]);
 				}
 				else{
 					file << "-" << gameMoves[i][j];
@@ -1008,7 +1020,6 @@ void saveSlot(int gameMoves[][9], int &slot, int &mistakesCount, int gameInitial
 			}
 			file << std::endl;
 		}
-		file << "mistakes: " << mistakesCount;
 		file.close();
 	}
 	else{
