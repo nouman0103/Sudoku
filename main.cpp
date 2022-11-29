@@ -834,6 +834,36 @@ void shuffleColumns(int board[][9]){
 		}
 	}
 }
+void shuffleNonet(int board[][9]){
+	//put row 4,5,6 at row 1,2,3
+	// put row 7,8,9 at row 4,5,6
+	// put row 1,2,3 at row 7,8,9
+	int temp[9][9];
+	for(int i = 0; i < 9; i++){
+		for(int j = 0; j < 9; j++){
+			temp[i][j] = board[i][j];
+		}
+	}
+	for(int i = 0; i < 3; i++){
+		for(int j = 0; j < 9; j++){
+			board[i][j] = temp[i + 3][j];
+		}
+	}
+	for(int i = 3; i < 6; i++){
+		for(int j = 0; j < 9; j++){
+			board[i][j] = temp[i + 3][j];
+		}
+	}
+	for(int i = 6; i < 9; i++){
+		for(int j = 0; j < 9; j++){
+			board[i][j] = temp[i - 6][j];
+		}
+	}
+	// theres a 90% chance that the nonets will be shuffled again
+	if(rand() % 10 < 9){
+		shuffleNonet(board);
+	}
+}
 
 void transpose(int board[][9]){
 	int temp[9][9];
@@ -861,8 +891,9 @@ void generateBoard(int gameMoves[][9], int gameInitial[][9], int level){
 		shuffleRows(gameMoves);
 		shuffleColumns(gameMoves);
 		transpose(gameMoves);
-		// 1 ms delay
-		if(i%10==0) SDL_Delay(1);
+		shuffleNonet(gameMoves);
+		// 1 ms delay 
+		if(i%50==0) SDL_Delay(1);
 		
 	}
 
