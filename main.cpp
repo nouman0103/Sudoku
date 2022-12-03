@@ -22,7 +22,7 @@ SDL_Texture *menuButtonsHover[3];
 SDL_Texture *menuButtonsPress[3];
 
 const int boardCoords[9] = {10, 84, 158, 243, 317, 391, 476, 550, 624};
-const int buttonsCoords[9][2] = {{743, 207}, {843, 207}, {943, 207}, {743, 307}, {843, 307}, {943, 307}, {743, 407}, {843, 407}, {943, 407}};
+const int buttonsCoords[9][2] = {{743, 167}, {843, 167}, {943, 167}, {743, 267}, {843, 267}, {943, 267}, {743, 367}, {843, 367}, {943, 367}};
 
 SDL_Texture *slotButtonsDefault[3];
 SDL_Texture *slotButtonHover[3];
