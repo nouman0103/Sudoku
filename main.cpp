@@ -22,7 +22,7 @@ SDL_Texture *menuButtonsHover[3];
 SDL_Texture *menuButtonsPress[3];
 
 const int boardCoords[9] = {10, 84, 158, 243, 317, 391, 476, 550, 624};
-const int buttonsCoords[9][2] = {{743, 167}, {843, 167}, {943, 167}, {743, 267}, {843, 267}, {943, 267}, {743, 367}, {843, 367}, {943, 367}};
+const int buttonsCoords[9][2] = {{743, 157}, {843, 157}, {943, 157}, {743, 257}, {843, 257}, {943, 257}, {743, 357}, {843, 357}, {943, 357}};
 
 SDL_Texture *slotButtonsDefault[3];
 SDL_Texture *slotButtonHover[3];
@@ -49,7 +49,6 @@ SDL_Texture *emptySlotDefault;
 SDL_Texture *emptySlotHover;
 SDL_Texture *emptySlotPress;
 
-// load audio from ./assets/sounds/cellSelect.mp3
 SDL_AudioSpec cellSelectSpec;
 Uint32 cellSelectLength;
 Uint8 *cellSelectBuffer;
@@ -104,8 +103,7 @@ int main(int argc, char *argv[])
 	SDL_Init(SDL_INIT_EVERYTHING);
 		
 	SDL_Init(SDL_INIT_AUDIO);
-	//Initialize SDL_mixer
-	
+
 	SDL_Window *window = SDL_CreateWindow("Sudoku", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1055, 700, SDL_WINDOW_FULLSCREEN_DESKTOP);
 	SDL_Rect boardRect;
 	SDL_GetWindowSize(window, &boardRect.w, &boardRect.h);
@@ -529,8 +527,6 @@ int main(int argc, char *argv[])
 	SDL_DestroyRenderer(renderer);
 	SDL_DestroyWindow(window);
 	SDL_Quit();
-
-	
 	
 	return 0;
 }

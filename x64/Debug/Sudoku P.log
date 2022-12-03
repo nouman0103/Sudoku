@@ -1,4 +1,4 @@
-﻿Build started 30/11/2022 7:52:46 PM.
+﻿Build started 03/12/2022 1:16:11 PM.
      1>Project "C:\Users\MN\Documents\Visual Studio 2015\Projects\Sudoku\Sudoku P\Sudoku P.vcxproj" on node 2 (Build target(s)).
      1>ClCompile:
          C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\x86_amd64\CL.exe /c /ZI /nologo /W3 /WX- /sdl /Od /D _MBCS /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"x64\Debug\\" /Fd"x64\Debug\vc140.pdb" /Gd /TP /errorReport:prompt main.cpp
@@ -16,4 +16,4 @@
 
 Build succeeded.
 
-Time Elapsed 00:00:01.68
+Time Elapsed 00:00:02.17
