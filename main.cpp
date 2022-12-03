@@ -13,6 +13,8 @@ SDL_Texture *selectedRowTex;
 SDL_Texture *selectedColTex;
 SDL_Texture *cellHoverTex;
 
+
+
 SDL_Texture *buttonsDefault[9];
 SDL_Texture *buttonsHover[9];
 SDL_Texture *buttonsPress[9];
@@ -105,9 +107,6 @@ int main(int argc, char *argv[])
 	SDL_Init(SDL_INIT_AUDIO);
 
 	SDL_Window *window = SDL_CreateWindow("Sudoku", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1055, 700, SDL_WINDOW_FULLSCREEN_DESKTOP);
-	SDL_Rect boardRect;
-	SDL_GetWindowSize(window, &boardRect.w, &boardRect.h);
-	
 	SDL_Renderer *renderer = SDL_CreateRenderer(window, -1, 0);
 	SDL_RenderSetLogicalSize(renderer, 1055, 700);
 	//enable anti aliasing
@@ -117,6 +116,12 @@ int main(int argc, char *argv[])
 	SDL_Surface *icon = IMG_Load("./assets/images/logo.png");
 	SDL_SetWindowIcon(window, icon);
 	SDL_FreeSurface(icon);
+
+	SDL_Rect boardRect;
+	boardRect.x = 0;
+	boardRect.y = 0;
+	boardRect.w = 1055;
+	boardRect.h = 700;
 
 	SDL_LoadWAV("./assets/sounds/cellSelect.wav", &cellSelectSpec, &cellSelectBuffer, &cellSelectLength);
 	cellSelectDeviceId =  SDL_OpenAudioDevice(NULL, 0, &cellSelectSpec, NULL, 0);
@@ -234,9 +239,11 @@ int main(int argc, char *argv[])
 	}
 	scanSlots();
 	bool quit = false;
+
 	// the game loop
 	while (!quit)
 	{
+		int start = SDL_GetTicks();
 		//check for events
 		SDL_Event event;
 		bool eventHappened = SDL_PollEvent(&event);
@@ -275,11 +282,7 @@ int main(int argc, char *argv[])
 
 		// clear the frame
 		SDL_RenderClear(renderer);
-		SDL_Rect boardRect;
-		boardRect.x = 0;
-		boardRect.y = 0;
-		boardRect.w = 1055;
-		boardRect.h = 700;
+		
 		int x, y;
 		getMousePos(renderer, x, y);
 		SDL_RenderCopy(renderer, board, NULL, &boardRect);
@@ -473,10 +476,11 @@ int main(int argc, char *argv[])
 		}
 
 		// draw mistakeOverlay with alpha value of mistakeOverlayAlpha
-		SDL_SetTextureAlphaMod(mistakeOverlay, mistakeOverlayAlpha);
-		SDL_RenderCopy(renderer, mistakeOverlay, NULL, NULL);
+
 		if(mistakeOverlayAlpha > 0){
-			mistakeOverlayAlpha -= 0.1;
+			SDL_SetTextureAlphaMod(mistakeOverlay, mistakeOverlayAlpha);
+			SDL_RenderCopy(renderer, mistakeOverlay, NULL, NULL);
+			mistakeOverlayAlpha -= 5;
 		}
 
 		// draw popup
@@ -516,11 +520,11 @@ int main(int argc, char *argv[])
 			}
 
 		}
-
-
 		SDL_RenderPresent(renderer);
-
-
+		// limit framerate to 60 fps
+		if(1000 / 60 > SDL_GetTicks() - start){
+			SDL_Delay(1000 / 60 - (SDL_GetTicks() - start));
+		}
 	}
 	// end the game
 	SDL_DestroyTexture(board);

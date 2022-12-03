@@ -1,12 +1,11 @@
-﻿Build started 03/12/2022 1:16:11 PM.
+﻿Build started 04/12/2022 1:11:27 AM.
      1>Project "C:\Users\MN\Documents\Visual Studio 2015\Projects\Sudoku\Sudoku P\Sudoku P.vcxproj" on node 2 (Build target(s)).
      1>ClCompile:
          C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\x86_amd64\CL.exe /c /ZI /nologo /W3 /WX- /sdl /Od /D _MBCS /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"x64\Debug\\" /Fd"x64\Debug\vc140.pdb" /Gd /TP /errorReport:prompt main.cpp
          main.cpp
-     1>c:\users\mn\documents\visual studio 2015\projects\sudoku\sudoku p\main.cpp(102): warning C4244: 'argument': conversion from 'time_t' to 'unsigned int', possible loss of data
-     1>c:\users\mn\documents\visual studio 2015\projects\sudoku\sudoku p\main.cpp(244): warning C4800: 'int': forcing value to bool 'true' or 'false' (performance warning)
-     1>c:\users\mn\documents\visual studio 2015\projects\sudoku\sudoku p\main.cpp(403): warning C4800: 'int': forcing value to bool 'true' or 'false' (performance warning)
-     1>c:\users\mn\documents\visual studio 2015\projects\sudoku\sudoku p\main.cpp(481): warning C4244: '-=': conversion from 'double' to 'int', possible loss of data
+     1>c:\users\mn\documents\visual studio 2015\projects\sudoku\sudoku p\main.cpp(103): warning C4244: 'argument': conversion from 'time_t' to 'unsigned int', possible loss of data
+     1>c:\users\mn\documents\visual studio 2015\projects\sudoku\sudoku p\main.cpp(249): warning C4800: 'int': forcing value to bool 'true' or 'false' (performance warning)
+     1>c:\users\mn\documents\visual studio 2015\projects\sudoku\sudoku p\main.cpp(404): warning C4800: 'int': forcing value to bool 'true' or 'false' (performance warning)
      1>c:\users\mn\documents\visual studio 2015\projects\sudoku\sudoku p\main.cpp(1064): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
      1>c:\users\mn\documents\visual studio 2015\projects\sudoku\sudoku p\main.cpp(1065): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
        Link:
@@ -16,4 +15,4 @@
 
 Build succeeded.
 
-Time Elapsed 00:00:02.17
+Time Elapsed 00:00:01.63
