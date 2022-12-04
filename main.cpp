@@ -15,6 +15,7 @@ SDL_Texture *cellHoverTex;
 
 
 
+
 SDL_Texture *buttonsDefault[9];
 SDL_Texture *buttonsHover[9];
 SDL_Texture *buttonsPress[9];
@@ -50,6 +51,8 @@ SDL_Texture *backButtonBasic;
 SDL_Texture *emptySlotDefault;
 SDL_Texture *emptySlotHover;
 SDL_Texture *emptySlotPress;
+
+SDL_Texture *helpMenu;
 
 SDL_AudioSpec cellSelectSpec;
 Uint32 cellSelectLength;
@@ -213,11 +216,14 @@ int main(int argc, char *argv[])
 	emptySlotHover = IMG_LoadTexture(renderer, "./assets/images/buttons/saveMenu/hover/empty.png");
 	emptySlotPress = IMG_LoadTexture(renderer, "./assets/images/buttons/saveMenu/press/empty.png");
 
+	// help menu
+	helpMenu = IMG_LoadTexture(renderer, "./assets/images/menu/helpMenu.png");
 	bool mainMenuActive = true;
 	bool saveMenuActive = false;
 	bool boardActive = false;
 	bool levelMenuActive = false;
 	bool popupActive = false;
+	bool helpMenuActive = false;
 
 
 	bool LeftClick = false;
@@ -384,6 +390,17 @@ int main(int argc, char *argv[])
 				}
 				
 			}
+			// if mouse click is between x 985 and 1025, and y 638 and 678:
+			if(x >= 985 && x <= 1025 && y >= 638 && y <= 678){
+				if(mouseReleased){
+					buttonUpSound();
+					helpMenuActive = true;
+					mainMenuActive = false;
+				}
+				if(mousePressed){
+					buttonDownSound();
+				}
+			}
 		}
 		else if(saveMenuActive){
 			SDL_RenderCopy(renderer, saveMenu, NULL, NULL);
@@ -474,6 +491,23 @@ int main(int argc, char *argv[])
 				
 			}
 		}
+		else if(helpMenuActive){
+			SDL_RenderCopy(renderer, helpMenu, NULL, NULL);
+			SDL_RenderCopy(renderer, backButtonBasic, NULL, NULL);
+			// if mouse is pressed on backButtonBasic, go back to main menu
+			if(x >= 51 && x <= 51 + 74 && y >= 51 && y <= 51 + 66){
+				if(mouseReleased){
+					buttonUpSound();
+					helpMenuActive = false;
+					mainMenuActive = true;
+				}
+				if(mousePressed){
+					buttonDownSound();
+				}
+			}
+
+		}
+	
 
 		// draw mistakeOverlay with alpha value of mistakeOverlayAlpha
 
