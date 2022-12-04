@@ -87,13 +87,21 @@ bool checkWin(int gameMoves[][9]);
 void shuffleRowGroups(int board[][9]);
 
 void getMousePos(SDL_Renderer *renderer, int &x, int &y);
+int timeOfButtonPress = 0;
 void buttonDownSound(){
 	SDL_QueueAudio(buttonDownDeviceId, buttonDownBuffer, buttonDownLength);
 	SDL_PauseAudioDevice(buttonDownDeviceId, 0);
+	timeOfButtonPress = SDL_GetTicks();
 }
 void buttonUpSound() {
+	//minimum delay between button up and down sounds is 100ms
+	// if button up is called before 100ms, it will wait until 100ms has passed
+	if (SDL_GetTicks() - timeOfButtonPress < 100) {
+		SDL_Delay(100 - (SDL_GetTicks() - timeOfButtonPress));
+	}
 	SDL_QueueAudio(buttonUpDeviceId, buttonUpBuffer, buttonUpLength);
 	SDL_PauseAudioDevice(buttonUpDeviceId, 0);
+	
 }
 
 
