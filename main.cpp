@@ -1,3 +1,8 @@
+/*
+Copyright (c) Nouman Iqbal, 2022
+All rights reserved.
+*/
+
 #include <iostream>
 #include <string>
 #include <time.h>
